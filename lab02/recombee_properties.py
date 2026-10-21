@@ -1,31 +1,60 @@
+import os
 import pandas as pd
-from recombee_api_client.api_client import RecombeeClient
+from recombee_api_client.api_client import RecombeeClient, Region
 from recombee_api_client.api_requests import AddItemProperty, ListItemProperties
 from recombee_api_client.exceptions import APIException
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def citeste_token():
+    """Citeste tokenul privat din variabila de mediu sau din fisierul .env (ignorat de git)"""
+    token = os.environ.get('RECOMBEE_PRIVATE_TOKEN')
+    if token:
+        return token
+    try:
+        with open(os.path.join(SCRIPT_DIR, '.env'), encoding='utf-8') as f:
+            for linie in f:
+                cheie, _, valoare = linie.strip().partition('=')
+                if cheie == 'RECOMBEE_PRIVATE_TOKEN':
+                    return valoare.strip()
+    except FileNotFoundError:
+        pass
+    raise SystemExit("Eroare: setati RECOMBEE_PRIVATE_TOKEN ca variabila de mediu sau in lab02/.env")
+
 # TODO 1: Configurare credentiale Recombee
 # Introduceti datele din contul vostru (Settings -> API Logins in Recombee Admin UI)
-DB_NAME = 'numele_bazei_tale_de_date'
-PRIVATE_TOKEN = 'tokenul_tau_privat'
+DB_NAME = 'vladimirjitaru-prod'
+PRIVATE_TOKEN = citeste_token()  # Tokenul NU se scrie in cod, ca sa nu ajunga pe GitHub
 REGION = 'eu-west'  # Schimbati cu 'us-west' sau regiunea potrivita daca este cazul
 
 # Initializarea clientului Recombee
-client = RecombeeClient(DB_NAME, PRIVATE_TOKEN, region=REGION)
+# SDK-ul asteapta regiunea ca enum (ex.: 'eu-west' -> Region.EU_WEST), nu ca string
+client = RecombeeClient(DB_NAME, PRIVATE_TOKEN, region=Region[REGION.upper().replace('-', '_')])
 
 # TODO 2: Configurare dataset propriu
 # Descarcati un dataset (CSV) de pe Kaggle/data.world (100-10K de intrari)
 # Urcati fisierul in acelasi folder cu acest script si setati numele in variabila de mai jos
-PATH_DATASET = 'dataset_ales.csv' 
+PATH_DATASET = os.path.join(SCRIPT_DIR, 'imdb_top_1000.csv')
 
 # TODO 3: Definirea schemei de date (minim 3 proprietati)
 # Adaptati aceasta lista in functie de coloanele din dataset-ul ales
 # Tipurile de date suportate de Recombee includ: 'string', 'int', 'double', 'boolean', 'timestamp'
-# Ex.: Pentru filme: titlu (string), an (int), rating (double)
+# (plus 'set' pentru liste de valori si 'image' pentru URL-uri de imagini)
+# Dataset: IMDB Top 1000 Movies and TV Shows (Kaggle) - coloana CSV in comentariu
 PROPRIETATI_CATALOG = [
-    {"name": "nume_proprietate_1", "type": "string"},
-    {"name": "nume_proprietate_2", "type": "int"},
-    {"name": "nume_proprietate_3", "type": "double"},
-    # Puteti adauga si alte proprietati optionale daca dataset-ul are
+    {"name": "title", "type": "string"},          # Series_Title
+    {"name": "released_year", "type": "int"},     # Released_Year
+    {"name": "certificate", "type": "string"},    # Certificate (ex.: PG-13, R, U)
+    {"name": "runtime_min", "type": "int"},       # Runtime ("142 min" -> 142)
+    {"name": "genres", "type": "set"},            # Genre ("Crime, Drama" -> ["Crime", "Drama"])
+    {"name": "imdb_rating", "type": "double"},    # IMDB_Rating
+    {"name": "meta_score", "type": "double"},     # Meta_score
+    {"name": "overview", "type": "string"},       # Overview
+    {"name": "director", "type": "string"},       # Director
+    {"name": "stars", "type": "set"},             # Star1..Star4
+    {"name": "num_votes", "type": "int"},         # No_of_Votes
+    {"name": "gross", "type": "double"},          # Gross ("28,341,469" -> 28341469.0)
+    {"name": "poster_url", "type": "image"},      # Poster_Link
 ]
 
 def load_dataset():
