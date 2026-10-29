@@ -7,7 +7,6 @@ from recombee_api_client.exceptions import APIException
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def citeste_token():
-    """Citeste tokenul privat din variabila de mediu sau din fisierul .env (ignorat de git)"""
     token = os.environ.get('RECOMBEE_PRIVATE_TOKEN')
     if token:
         return token
@@ -24,11 +23,10 @@ def citeste_token():
 # TODO 1: Configurare credentiale Recombee
 # Introduceti datele din contul vostru (Settings -> API Logins in Recombee Admin UI)
 DB_NAME = 'vladimirjitaru-prod'
-PRIVATE_TOKEN = citeste_token()  # Tokenul NU se scrie in cod, ca sa nu ajunga pe GitHub
+PRIVATE_TOKEN = citeste_token()
 REGION = 'eu-west'  # Schimbati cu 'us-west' sau regiunea potrivita daca este cazul
 
 # Initializarea clientului Recombee
-# SDK-ul asteapta regiunea ca enum (ex.: 'eu-west' -> Region.EU_WEST), nu ca string
 client = RecombeeClient(DB_NAME, PRIVATE_TOKEN, region=Region[REGION.upper().replace('-', '_')])
 
 # TODO 2: Configurare dataset propriu
@@ -39,22 +37,22 @@ PATH_DATASET = os.path.join(SCRIPT_DIR, 'imdb_top_1000.csv')
 # TODO 3: Definirea schemei de date (minim 3 proprietati)
 # Adaptati aceasta lista in functie de coloanele din dataset-ul ales
 # Tipurile de date suportate de Recombee includ: 'string', 'int', 'double', 'boolean', 'timestamp'
-# (plus 'set' pentru liste de valori si 'image' pentru URL-uri de imagini)
-# Dataset: IMDB Top 1000 Movies and TV Shows (Kaggle) - coloana CSV in comentariu
+# Ex.: Pentru filme: titlu (string), an (int), rating (double)
 PROPRIETATI_CATALOG = [
-    {"name": "title", "type": "string"},          # Series_Title
-    {"name": "released_year", "type": "int"},     # Released_Year
-    {"name": "certificate", "type": "string"},    # Certificate (ex.: PG-13, R, U)
-    {"name": "runtime_min", "type": "int"},       # Runtime ("142 min" -> 142)
-    {"name": "genres", "type": "set"},            # Genre ("Crime, Drama" -> ["Crime", "Drama"])
-    {"name": "imdb_rating", "type": "double"},    # IMDB_Rating
-    {"name": "meta_score", "type": "double"},     # Meta_score
-    {"name": "overview", "type": "string"},       # Overview
-    {"name": "director", "type": "string"},       # Director
-    {"name": "stars", "type": "set"},             # Star1..Star4
-    {"name": "num_votes", "type": "int"},         # No_of_Votes
-    {"name": "gross", "type": "double"},          # Gross ("28,341,469" -> 28341469.0)
-    {"name": "poster_url", "type": "image"},      # Poster_Link
+    {"name": "title", "type": "string"},
+    {"name": "released_year", "type": "int"},
+    {"name": "certificate", "type": "string"},
+    {"name": "runtime_min", "type": "int"},
+    {"name": "genres", "type": "set"},
+    {"name": "imdb_rating", "type": "double"},
+    {"name": "meta_score", "type": "double"},
+    {"name": "overview", "type": "string"},
+    {"name": "director", "type": "string"},
+    {"name": "stars", "type": "set"},
+    {"name": "num_votes", "type": "int"},
+    {"name": "gross", "type": "double"},
+    {"name": "poster_url", "type": "image"},
+    # Puteti adauga si alte proprietati optionale daca dataset-ul are
 ]
 
 def load_dataset():

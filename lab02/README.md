@@ -32,7 +32,7 @@
 
 ## Observații despre date
 
-- `Certificate` lipsește la 101 filme, `Meta_score` la 157, iar `Gross` la 169; acestea vor fi trimise ca `null`.
+- `Certificate` lipsește la 101 filme, `Meta_score` la 157, iar `Gross` la 169; acestea nu sunt trimise, iar în Recombee proprietățile respective rămân goale.
 - `Released_Year` are o valoare greșită: filmul *Apollo 13* are `PG` în loc de `1995`.
 
 ## Rulare script
